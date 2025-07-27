@@ -1,6 +1,7 @@
 streamlit>=1.28.0
 pandas>=1.5.0
-numpy>=1.24.0
+numpy==1.24.3
+pandas-ta==0.3.14b0
 plotly>=5.15.0
 ccxt>=4.0.0
 python-dateutil>=2.8.0
@@ -18,7 +19,7 @@ ta>=0.10.0
 yfinance>=0.2.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
-pandas-ta==0.3.14b0
+--use-deprecated=legacy-resolver
 
 
 # Production dependencies
