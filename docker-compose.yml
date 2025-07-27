@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  cryptocaller:
+    build: .
+    container_name: cryptocaller-app
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cryptocaller-network
+
+  # Optional: Redis for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: cryptocaller-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - cryptocaller-network
+
+  # Optional: PostgreSQL database (uncomment if needed)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: cryptocaller-postgres
+  #   environment:
+  #     POSTGRES_DB: cryptocaller
+  #     POSTGRES_USER: cryptocaller
+  #     POSTGRES_PASSWORD: your_secure_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - cryptocaller-network
+
+networks:
+  cryptocaller-network:
+    driver: bridge
+
+volumes:
+  # redis_data:
+  # postgres_data:
+  data:
+  logs:
+  cache:
+
