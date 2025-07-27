@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-import talib
+import pandas_ta as ta
 import ccxt
 
 # Set up logging
@@ -160,23 +160,41 @@ class TrendFollowingEngine(BaseTradingEngine):
     
     def _calculate_indicators(self, data: pd.DataFrame) -> Dict[str, np.ndarray]:
         """Calculate technical indicators"""
-        close = data['close'].values
-        high = data['high'].values
-        low = data['low'].values
-        volume = data['volume'].values
+        # Calculate indicators using pandas_ta
+        sma_short = ta.sma(data['close'], length=self.short_ma_period)
+        sma_long = ta.sma(data['close'], length=self.long_ma_period)
+        ema_short = ta.ema(data['close'], length=self.short_ma_period)
+        ema_long = ta.ema(data['close'], length=self.long_ma_period)
+        rsi = ta.rsi(data['close'], length=self.rsi_period)
+        
+        # MACD calculation
+        macd_data = ta.macd(data['close'], fast=self.macd_fast, slow=self.macd_slow, signal=self.macd_signal)
+        macd_line = macd_data[f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}']
+        macd_signal = macd_data[f'MACDs_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}']
+        macd_histogram = macd_data[f'MACDh_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}']
+        
+        # Bollinger Bands
+        bb_data = ta.bbands(data['close'], length=20, std=2)
+        bb_upper = bb_data['BBU_20_2.0']
+        bb_middle = bb_data['BBM_20_2.0']
+        bb_lower = bb_data['BBL_20_2.0']
+        
+        # ATR and ADX
+        atr = ta.atr(data['high'], data['low'], data['close'], length=14)
+        adx = ta.adx(data['high'], data['low'], data['close'], length=14)['ADX_14']
         
         indicators = {
-            'sma_short': talib.SMA(close, timeperiod=self.short_ma_period),
-            'sma_long': talib.SMA(close, timeperiod=self.long_ma_period),
-            'ema_short': talib.EMA(close, timeperiod=self.short_ma_period),
-            'ema_long': talib.EMA(close, timeperiod=self.long_ma_period),
-            'rsi': talib.RSI(close, timeperiod=self.rsi_period),
-            'macd': talib.MACD(close, fastperiod=self.macd_fast, slowperiod=self.macd_slow, signalperiod=self.macd_signal),
-            'bb_upper': talib.BBANDS(close, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)[0],
-            'bb_middle': talib.BBANDS(close, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)[1],
-            'bb_lower': talib.BBANDS(close, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)[2],
-            'atr': talib.ATR(high, low, close, timeperiod=14),
-            'adx': talib.ADX(high, low, close, timeperiod=14)
+            'sma_short': sma_short.values,
+            'sma_long': sma_long.values,
+            'ema_short': ema_short.values,
+            'ema_long': ema_long.values,
+            'rsi': rsi.values,
+            'macd': (macd_line.values, macd_signal.values, macd_histogram.values),
+            'bb_upper': bb_upper.values,
+            'bb_middle': bb_middle.values,
+            'bb_lower': bb_lower.values,
+            'atr': atr.values,
+            'adx': adx.values
         }
         
         return indicators
@@ -344,7 +362,7 @@ class MeanReversionEngine(BaseTradingEngine):
             z_score = (current_price - mean_price) / std_price
             
             # Calculate RSI
-            rsi = talib.RSI(close, timeperiod=self.rsi_period)[-1]
+            rsi = ta.rsi(data['close'], length=self.rsi_period).iloc[-1]
             
             # Generate signal
             signal_strength = 0
@@ -450,8 +468,8 @@ class MomentumEngine(BaseTradingEngine):
             volume_ratio = np.mean(volume[-5:]) / np.mean(volume[-self.volume_period:])
             
             # Calculate additional indicators
-            rsi = talib.RSI(close, timeperiod=14)[-1]
-            atr = talib.ATR(high, low, close, timeperiod=14)[-1]
+            rsi = ta.rsi(data['close'], length=14).iloc[-1]
+            atr = ta.atr(data['high'], data['low'], data['close'], length=14).iloc[-1]
             
             signal_strength = 0
             reasons = []
