@@ -9,11 +9,49 @@ from dataclasses import dataclass, asdict
 from src.trading_engine import TrendFollowingEngine
 from src.market_data import MarketDataManager
 from src.risk_management import RiskManager, RiskMetrics
-from src.models.trading import Portfolio, Position, Trade, TradingConfig
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+@dataclass
+class Portfolio:
+    """Data class for portfolio information"""
+    total_value: float = 0.0
+    available_balance: float = 0.0
+    positions: Dict = None
+    
+    def __post_init__(self):
+        if self.positions is None:
+            self.positions = {}
+
+@dataclass
+class Position:
+    """Data class for trading positions"""
+    symbol: str
+    side: str  # 'long' or 'short'
+    size: float
+    entry_price: float
+    current_price: float = 0.0
+    unrealized_pnl: float = 0.0
+
+@dataclass 
+class Trade:
+    """Data class for completed trades"""
+    symbol: str
+    side: str
+    size: float
+    price: float
+    timestamp: datetime
+    trade_id: str = ""
+
+@dataclass
+class TradingConfig:
+    """Data class for trading configuration"""
+    max_position_size: float = 0.1
+    risk_per_trade: float = 0.02
+    stop_loss_pct: float = 0.05
+    take_profit_pct: float = 0.1
 
 @dataclass
 class TradingSignal:

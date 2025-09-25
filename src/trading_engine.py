@@ -17,7 +17,12 @@ from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-import pandas_ta as ta
+try:
+    import pandas_ta as ta
+except ImportError:
+    # Fallback if pandas_ta is not available
+    print("pandas_ta not available, using basic technical indicators")
+    ta = None
 import ccxt
 
 # Set up logging
