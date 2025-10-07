@@ -20,6 +20,12 @@ beautifulsoup4>=4.12.0
 lxml>=4.9.0
 numpy>=1.24.0
 pandas-ta>=0.3.14
+numpy==1.24.3
+pandas-ta==0.3.14b0
+pandas-ta @ git+https://github.com/twopirllc/pandas-ta@0.3.14b0
+
+
+
 # Production dependencies
 gunicorn>=21.2.0
 psycopg2-binary>=2.9.0
